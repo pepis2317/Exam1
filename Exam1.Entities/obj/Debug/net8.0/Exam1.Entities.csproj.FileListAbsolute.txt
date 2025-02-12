@@ -1,0 +1,28 @@
+C:\Users\Lenovo\source\repos\Exam1.Entities\bin\Debug\net8.0\Exam1.Entities.deps.json
+C:\Users\Lenovo\source\repos\Exam1.Entities\bin\Debug\net8.0\Exam1.Entities.dll
+C:\Users\Lenovo\source\repos\Exam1.Entities\bin\Debug\net8.0\Exam1.Entities.pdb
+C:\Users\Lenovo\source\repos\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Lenovo\source\repos\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.AssemblyInfoInputs.cache
+C:\Users\Lenovo\source\repos\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.AssemblyInfo.cs
+C:\Users\Lenovo\source\repos\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.csproj.CoreCompileInputs.cache
+C:\Users\Lenovo\source\repos\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.dll
+C:\Users\Lenovo\source\repos\Exam1.Entities\obj\Debug\net8.0\refint\Exam1.Entities.dll
+C:\Users\Lenovo\source\repos\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.pdb
+C:\Users\Lenovo\source\repos\Exam1.Entities\obj\Debug\net8.0\ref\Exam1.Entities.dll
+C:\Users\Lenovo\source\repos\Exam1.Entities\bin\Debug\net8.0\Exam1.Entities.runtimeconfig.json
+C:\Users\Lenovo\source\repos\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.csproj.AssemblyReference.cache
+C:\Users\Lenovo\source\repos\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.genruntimeconfig.cache
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\bin\Debug\net8.0\Exam1.Entities.deps.json
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\bin\Debug\net8.0\Exam1.Entities.runtimeconfig.json
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\bin\Debug\net8.0\Exam1.Entities.dll
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\bin\Debug\net8.0\Exam1.Entities.pdb
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.csproj.AssemblyReference.cache
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.AssemblyInfoInputs.cache
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.AssemblyInfo.cs
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.csproj.CoreCompileInputs.cache
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.dll
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\obj\Debug\net8.0\refint\Exam1.Entities.dll
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.pdb
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\obj\Debug\net8.0\Exam1.Entities.genruntimeconfig.cache
+C:\Users\Lenovo\source\repos\Exam1_Candra Wijaya\Exam1.Entities\obj\Debug\net8.0\ref\Exam1.Entities.dll
