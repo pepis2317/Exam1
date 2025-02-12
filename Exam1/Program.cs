@@ -1,10 +1,12 @@
 using Exam1.Services;
 using Exam1.Entities;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
+Log.Logger = new LoggerConfiguration().WriteTo.Console().WriteTo.File($"logs/Log-.txt", rollingInterval: RollingInterval.Day).CreateLogger(); 
 // Add services to the container.
-
+builder.Host.UseSerilog();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -20,10 +22,9 @@ builder.Services.AddDbContextPool<AccelokaContext>(options =>
 builder.Services.AddTransient<TicketService>();
 builder.Services.AddTransient<BookedTicketService>();
 
-//omg hiiiiiiii
 
 var app = builder.Build();
-
+app.UseSerilogRequestLogging();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

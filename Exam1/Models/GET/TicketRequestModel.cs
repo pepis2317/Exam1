@@ -9,7 +9,7 @@
         //search by ticket name
         public string? TicketName { get; set; }
         //search for prices lesser than equal
-        public int Price { get; set; }
+        public int? Price { get; set; }
         //search by date
         public string? MinDate { get; set; }
         public string? MaxDate { get; set; }

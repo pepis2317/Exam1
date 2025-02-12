@@ -1,6 +1,8 @@
 ﻿using Exam1.Entities;
 using Exam1.Models.GET;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Globalization;
 
 namespace Exam1.Services
@@ -12,9 +14,56 @@ namespace Exam1.Services
         {
             _db = db;
         }
+        public string validateQuery(TicketRequestModel request)
+        {
+            
+            if (request.MinDate != null)
+            {
+                DateTime dateValue;
+                if (!DateTime.TryParseExact(request.MinDate, "dd-MM-yyyy HH:mm",
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out dateValue))
+                {
+                    return "Min date is not in the correct format (dd-MM-yyyy HH:mm)";
+                }
+            }
+
+            if (request.MaxDate != null)
+            {
+                DateTime dateValue;
+                if (!DateTime.TryParseExact(request.MaxDate, "dd-MM-yyyy HH:mm",
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out dateValue))
+                {
+                    return "Max date is not in the correct format (dd-MM-yyyy HH:mm)";
+                }
+            }
+            if (request.OrderBy != null)
+            {
+                HashSet<string> validColumns = new HashSet<string>()
+                {
+                    "CategoryName","TicketCode","TicketName", "EventDate", "Price", "Quota"
+                };
+                if (!validColumns.Contains(request.OrderBy))
+                {
+                    return request.OrderBy + " is not a valid column name (column names are case sensitive)";
+                }
+                if (request.OrderState != null)
+                {
+                    if (!request.OrderState.ToLower().Equals("descending") && !request.OrderState.ToLower().Equals("ascending"))
+                    {
+                        return "Order state must be ascending or descending (case insensitive)";
+                    }
+                }
+
+            }
+            if(request.OrderBy == null && request.OrderState != null)
+            {
+                return "Column must be specified to sort in ascending or descending order";
+            }
+            return "Ok";
+        }
         public async Task<TicketsResponseModel> Get(TicketRequestModel request)
         {
-            var query = _db.Tickets.AsQueryable();
+            var query = _db.Tickets.Include(q => q.Category).AsQueryable();
             if (!string.IsNullOrEmpty(request.CategoryName))
             {
                 query = query.Where(q => q.Category.CategoryName.ToLower().Contains( request.CategoryName.ToLower()));
@@ -37,34 +86,20 @@ namespace Exam1.Services
                 var maxDate = DateTime.ParseExact(request.MaxDate, "dd-MM-yyyy hh:mm", CultureInfo.InvariantCulture);
                 query = query.Where(q => q.EventDate <= maxDate);
             }
-            if (request.Price !=0)
+            if (request.Price != null)
             {
                 query = query.Where(q => q.Price <= request.Price);
             }
             if (!string.IsNullOrEmpty(request.OrderBy))
             {
-                Dictionary<string, string> validColumns = new Dictionary<string, string>()
+                bool isDescending = request.OrderState?.ToLower().Equals("descending") ?? false;
+                if (request.OrderBy.Equals("CategoryName"))
                 {
-                    {"categoryname", "CategoryName" },
-                    {"ticketcode", "TicketCode"},
-                    {"ticketname", "TicketName"},
-                    {"eventdate", "EventDate"},
-                    {"price","Price"},
-                    {"quota","Quota"}
-
-                };
-
-                if (validColumns.ContainsKey(request.OrderBy.ToLower()))
+                    query = isDescending ? query.OrderByDescending(q => q.Category.CategoryName) : query.OrderBy(q => q.Category.CategoryName);
+                }
+                else
                 {
-                    string columnName = validColumns[request.OrderBy.ToLower()];
-                    if (request.OrderState?.ToLower().Equals("descending", StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        query = query.OrderByDescending(e => EF.Property<object>(e, columnName));
-                    }
-                    else
-                    {
-                        query = query.OrderBy(e => EF.Property<object>(e, columnName));
-                    }
+                    query = isDescending ? query.OrderByDescending(q => EF.Property<object>(q, request.OrderBy)) : query.OrderBy(q => EF.Property<object>(q, request.OrderBy));
                 }
             }
 
