@@ -20,7 +20,7 @@ builder.Services.AddDbContextPool<AccelokaContext>(options =>
 builder.Services.AddTransient<TicketService>();
 builder.Services.AddTransient<BookedTicketService>();
 
-
+//omg hiiiiiiii
 
 var app = builder.Build();
 
