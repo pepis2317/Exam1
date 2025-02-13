@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
-Log.Logger = new LoggerConfiguration().WriteTo.Console().WriteTo.File($"logs/Log-.txt", rollingInterval: RollingInterval.Day).CreateLogger(); 
+Log.Logger = new LoggerConfiguration().WriteTo.Console().WriteTo.File($"logs/Log-.txt", rollingInterval: RollingInterval.Day, outputTemplate:"{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] {Message:j}{NewLine}{Exception}").CreateLogger(); 
 // Add services to the container.
 builder.Host.UseSerilog();
 builder.Services.AddControllers();
