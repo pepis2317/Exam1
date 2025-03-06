@@ -1,8 +1,7 @@
 ﻿using Azure.Core;
 using Exam1.Entities;
-using Exam1.Models;
-using Exam1.Models.GET;
-using Exam1.Models.POST;
+using Exam1.Models.Booking;
+using Exam1.Models.Ticket;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -16,12 +15,13 @@ namespace Exam1.Services
         {
             _db = db;
         }
+        
         private async Task<string> GenerateNewId()
         {
-            var latestId = await _db.BookedTickets.OrderByDescending(q => q.BookedTicketId).Select(q => q.BookedTicketId).FirstOrDefaultAsync();
-            if(latestId != null)
+            var latestId = await _db.Carts.OrderByDescending(q => q.BookedTicketId).Select(q => q.BookedTicketId).FirstOrDefaultAsync();
+            if (latestId != null)
             {
-                string numericPart = latestId.Substring(1); 
+                string numericPart = latestId.Substring(1);
                 if (int.TryParse(numericPart, out int number))
                 {
                     number++;
@@ -30,171 +30,59 @@ namespace Exam1.Services
             }
             return "B001";
         }
-        public async Task<string> validateBookingList(List<BookingModel> bookingList)
 
+        public async Task<BookTicketResponseModel> Post(Guid userId, List<BookingModel> bookingList)
         {
-            HashSet<string> ticketCodes = new HashSet<string>();
-                
-            foreach (BookingModel booking in bookingList)
+            var bookedTicketId = "";
+            var cartData = await _db.Carts.Where(q => q.UserId == userId).OrderByDescending(q => q.BookedTicketId).FirstOrDefaultAsync();
+            if (cartData!=null)
             {
-                if (ticketCodes.Contains(booking.TicketCode))
+                if(cartData.IsCompleted == "false")
                 {
-                    return "No duplicates allowed";
+                    bookedTicketId = cartData.BookedTicketId;
                 }
                 else
                 {
-                    if (booking.Quantity <= 0)
+                    bookedTicketId = await GenerateNewId();
+                    _db.Carts.Add(new Cart
                     {
-                        return "Booking quantity must not be 0";
-                    }
-                    else
-                    {
-                        var ticket = await _db.Tickets.Include(q => q.Category).Where(q => q.TicketCode == booking.TicketCode).FirstOrDefaultAsync();
-                        if (ticket != null)
-                        {
-                            if (ticket.EventDate <= DateTime.Now)
-                            {
-                                return "Booking must be an event in the future";
-                            }
-                            if(ticket.Quota == 0)
-                            {
-                                return "No available tickets";
-                            }
-                            if (ticket.Quota < booking.Quantity)
-                            {
-                                return "Booking must be less than or equal to the number of available quota";
-                            }
+                        CartId = Guid.NewGuid(),
+                        UserId = userId,
+                        BookedTicketId = bookedTicketId,
+                        IsCompleted = "false"
+                    });
+                    await _db.SaveChangesAsync();
+                }
+            }
+            else
+            {
+                bookedTicketId = await GenerateNewId();
+                _db.Carts.Add(new Cart
+                {
+                    CartId = Guid.NewGuid(),
+                    UserId = userId,
+                    BookedTicketId = bookedTicketId,
+                    IsCompleted = "false"
+                });
+                await _db.SaveChangesAsync();
+            }
+           
 
-                        }
-                        else
-                        {
-                            return "Invalid ticket code";
-                        }
-                        ticketCodes.Add(booking.TicketCode);
-                    }
-                }
-                
-            }
-            return "Ok";
-        }
-        public async Task<string> validateDeletion(string BookedTicketId, string TicketCode, int Quantity)
-        {
-            var bookingData = await _db.BookedTickets.Where(q => q.BookedTicketId == BookedTicketId).FirstOrDefaultAsync();
-            if (bookingData == null)
-            {
-                return "Invalid booking id";
-            }
-            var ticketData = await _db.Tickets.Where(q => q.TicketCode == TicketCode).FirstOrDefaultAsync();
-            if(ticketData == null)
-            {
-                return "Invalid ticket code";
-            }
-            var bookingCombo = await _db.BookedTickets.Where(q => q.BookedTicketId == BookedTicketId).Where(q=>q.TicketCode == TicketCode).FirstOrDefaultAsync();
-            if (bookingCombo == null)
-            {
-                return "BookedTicketId and TicketCode pair doesn't exist";
-            }
-            if (Quantity > bookingData.Quantity)
-            {
-                return "Quantity deleted must be less than or equal to booked quantity";
-            }
-            return "Ok";
-        }
-        public async Task<string> validateBatchDeletion(string BookedTicketId, List<BookingModel> request)
-        {
-            HashSet<string> ticketCodes = new HashSet<string>();
-            foreach (var item in request)
-            {
-                if (ticketCodes.Contains(item.TicketCode))
-                {
-                    return "No duplicates allowed";
-                }
-                else
-                {
-                    var bookingData = await _db.BookedTickets.Where(q => q.BookedTicketId == BookedTicketId).FirstOrDefaultAsync();
-                    if (bookingData == null)
-                    {
-                        return "Invalid booking id";
-                    }
-                    var ticketData = await _db.Tickets.Where(q => q.TicketCode == item.TicketCode).FirstOrDefaultAsync();
-                    if (ticketData == null)
-                    {
-                        return "Invalid ticket code";
-                    }
-                    var bookingCombo = await _db.BookedTickets.Where(q => q.BookedTicketId == BookedTicketId).Where(q => q.TicketCode == item.TicketCode).FirstOrDefaultAsync();
-                    if (bookingCombo == null)
-                    {
-                        return "BookedTicketId and TicketCode pair doesn't exist";
-                    }
-                    if (item.Quantity > bookingCombo.Quantity)
-                    {
-                        return "Quantity deleted must be less than or equal to booked quantity"; 
-                    }
-                    ticketCodes.Add(item.TicketCode);
-                }
-            }
-            return ("Ok");
-        }
-        public async Task<string> validateBatchEdit(string BookedTicketId, List<BookingModel> request)
-        {
-            HashSet<string> ticketCodes = new HashSet<string>();
-            foreach (var item in request)
-            {
-                if (ticketCodes.Contains(item.TicketCode))
-                {
-                    return "No duplicates allowed";
-                }
-                else
-                {
-                    var bookingData = await _db.BookedTickets.Where(q => q.BookedTicketId == BookedTicketId).FirstOrDefaultAsync();
-                    if (bookingData == null)
-                    {
-                        return "Invalid booking id";
-                    }
-                    var ticketData = await _db.Tickets.Where(q => q.TicketCode == item.TicketCode).FirstOrDefaultAsync();
-                    if (ticketData == null)
-                    {
-                        return "Invalid ticket code";
-                    }
-                    var bookingCombo = await _db.BookedTickets.Where(q => q.BookedTicketId == BookedTicketId).Where(q => q.TicketCode == item.TicketCode).FirstOrDefaultAsync();
-                    if (bookingCombo == null)
-                    {
-                        return "BookedTicketId and TicketCode pair doesn't exist";
-                    }
-                    if (item.Quantity > ticketData.Quota)
-                    {
-                        return "Quantity edited must be less than or equal to ticket quota";
-                    }
-                    if (item.Quantity < 1)
-                    {
-                        return "Quantity must be greater than equal to 1";
-                    }
-
-                    ticketCodes.Add(item.TicketCode);
-                }
-            }
-            return ("Ok");
-        }
-
-        public async Task<BookTicketResponseModel?> Post(List<BookingModel> bookingList)
-        {
             int priceSummary = 0;
             Dictionary<string, TicketsPerCategoryModel> categories = new Dictionary<string, TicketsPerCategoryModel> ();
-            string id = await GenerateNewId();
             foreach(BookingModel booking in bookingList)
             {
                 var ticket= await _db.Tickets.Include(q=>q.Category).Where(q => q.TicketCode == booking.TicketCode).FirstOrDefaultAsync();
                 if (ticket!= null)
                 {
-                    ticket.Quota -= booking.Quantity;
                     priceSummary += ticket.Price * booking.Quantity;
-                    _db.Tickets.Update(ticket);
+
 
                     string categoryName = ticket.Category.CategoryName;
                     if (categories.ContainsKey(categoryName))
                     {
                         var category = categories[ticket.Category.CategoryName];
-                        category.Tickets.Add(new TicketInfo
+                        category.Tickets.Add(new TicketInfoModel
                         {
                             TicketCode = ticket.TicketCode,
                             TicketName = ticket.TicketName,
@@ -208,9 +96,9 @@ namespace Exam1.Services
                         {
                             CategoryName = categoryName,
                             SummaryPrice = ticket.Price * booking.Quantity,
-                            Tickets = new List<TicketInfo>() 
+                            Tickets = new List<TicketInfoModel>() 
                             { 
-                                new TicketInfo 
+                                new TicketInfoModel 
                                 {
                                 TicketCode = ticket.TicketCode,
                                 TicketName = ticket.TicketName,
@@ -224,7 +112,7 @@ namespace Exam1.Services
                 var bookingData = new BookedTicket
                 {
                     Id = Guid.NewGuid(),
-                    BookedTicketId = id,
+                    BookedTicketId = bookedTicketId,
                     TicketCode = booking.TicketCode,
                     Quantity = booking.Quantity
                 };
@@ -245,9 +133,9 @@ namespace Exam1.Services
             return data;
             
         }
-        public async Task<List<BookedTicketPerCategoryModel>> Get(string id)
+        public async Task<List<TicketsPerCategoryModel>> Get(string id)
         {
-            Dictionary<string, BookedTicketPerCategoryModel> categories = new Dictionary<string, BookedTicketPerCategoryModel>();
+            Dictionary<string, TicketsPerCategoryModel> categories = new Dictionary<string, TicketsPerCategoryModel>();
             var bookedTickets = await _db.BookedTickets.Where(q=>q.BookedTicketId == id).ToListAsync();
             foreach (var booking in bookedTickets)
             {
@@ -258,43 +146,49 @@ namespace Exam1.Services
                     if (categories.ContainsKey(categoryName))
                     {
                         var category = categories[ticket.Category.CategoryName];
-                        category.Tickets.Add(new BookedTicketModel
+                        category.Tickets.Add(new TicketInfoModel
                         {
                             TicketCode = ticket.TicketCode,
                             TicketName = ticket.TicketName,
                             EventDate = ticket.EventDate.ToString("dd-MM-yyyy hh:mm"),
+                            Quantity = booking.Quantity,
+                            TotalPrice = ticket.Price * booking.Quantity
                         });
                         category.QtyPerCategory += booking.Quantity;
+                        category.SummaryPrice += ticket.Price * booking.Quantity;
                     }
                     else
                     {
-                        categories.Add(categoryName, new BookedTicketPerCategoryModel
+                        categories.Add(categoryName, new TicketsPerCategoryModel
                         {
                             QtyPerCategory = booking.Quantity,
                             CategoryName = categoryName,
-                            Tickets = new List<BookedTicketModel>()
+                            Tickets = new List<TicketInfoModel>()
                             {
-                                new BookedTicketModel
+                                new TicketInfoModel
                                 {
                                     TicketCode = ticket.TicketCode,
                                     TicketName = ticket.TicketName,
-                                    EventDate = ticket.EventDate.ToString("dd-MM-yyyy hh:mm")
+                                    EventDate = ticket.EventDate.ToString("dd-MM-yyyy hh:mm"),
+                                    Quantity = booking.Quantity,
+                                    TotalPrice = ticket.Price * booking.Quantity
                                 }
-                            }
+                            },
+                            SummaryPrice = ticket.Price * booking.Quantity
+
                         });
                     }
                 }
             }
-            List<BookedTicketPerCategoryModel> data = new List<BookedTicketPerCategoryModel>();
+            List<TicketsPerCategoryModel> data = new List<TicketsPerCategoryModel>();
             foreach(var category in categories)
             {
                 data.Add(category.Value);
             }
             return data;
         }
-        
 
-        public async Task<List<ChangedTicketModel>> Delete(string bookedTicketId, string ticketCode, int quantity)
+        public async Task<List<TicketInfoModel>> Delete(string bookedTicketId, string ticketCode, int quantity)
         {
             var bookingData = await _db.BookedTickets.Where(q => q.BookedTicketId == bookedTicketId).Where(q => q.TicketCode == ticketCode).FirstOrDefaultAsync();
             if (bookingData != null)
@@ -313,7 +207,7 @@ namespace Exam1.Services
             }
             return await GetChangedTickets(bookedTicketId);
         }
-        public async Task<List<ChangedTicketModel>> BatchDelete(string bookedTicketId, List<BookingModel> request)
+        public async Task<List<TicketInfoModel>> BatchDelete(string bookedTicketId, List<BookingModel> request)
         {
             foreach(var revoke in request)
             {
@@ -335,7 +229,7 @@ namespace Exam1.Services
             }
             return await GetChangedTickets(bookedTicketId);
         }
-        public async Task<List<ChangedTicketModel>> Put(string bookedTicketId, List<BookingModel> request)
+        public async Task<List<TicketInfoModel>> Put(string bookedTicketId, List<BookingModel> request)
         {
             foreach (var edit in request)
             {
@@ -345,10 +239,6 @@ namespace Exam1.Services
                     var ticketData = await _db.Tickets.Where(q => q.TicketCode == edit.TicketCode).FirstOrDefaultAsync();
                     if (ticketData != null)
                     {
-                        var diff = bookingData.Quantity - edit.Quantity;
-                        ticketData.Quota += diff;
-                        _db.Tickets.Update(ticketData);
-
                         bookingData.Quantity = edit.Quantity;
                         _db.BookedTickets.Update(bookingData);
                         await _db.SaveChangesAsync();
@@ -358,16 +248,16 @@ namespace Exam1.Services
             return await GetChangedTickets(bookedTicketId);
         }
 
-        private async Task<List<ChangedTicketModel>> GetChangedTickets(string bookedTicketId)
+        private async Task<List<TicketInfoModel>> GetChangedTickets(string bookedTicketId)
         {
-            List<ChangedTicketModel> changedTickets = new List<ChangedTicketModel>();
+            List<TicketInfoModel> changedTickets = new List<TicketInfoModel>();
             var bookedTickets = await _db.BookedTickets.Where(q=>q.BookedTicketId==bookedTicketId).ToListAsync();
             foreach(var bookedTicket in bookedTickets)
             {
                 var ticket = await _db.Tickets.Include(q=>q.Category).Where(q=>q.TicketCode == bookedTicket.TicketCode).FirstOrDefaultAsync();
                 if (ticket != null)
                 {
-                    changedTickets.Add(new ChangedTicketModel
+                    changedTickets.Add(new TicketInfoModel
                     {
                         TicketCode = ticket.TicketCode,
                         TicketName = ticket.TicketName,

@@ -1,5 +1,5 @@
 ﻿using Exam1.Entities;
-using Exam1.Models.GET;
+using Exam1.Models.Ticket;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -13,53 +13,6 @@ namespace Exam1.Services
         public TicketService(AccelokaContext db)
         {
             _db = db;
-        }
-        public string validateQuery(TicketRequestModel request)
-        {
-            
-            if (request.MinDate != null)
-            {
-                DateTime dateValue;
-                if (!DateTime.TryParseExact(request.MinDate, "dd-MM-yyyy HH:mm",
-                    CultureInfo.InvariantCulture, DateTimeStyles.None, out dateValue))
-                {
-                    return "Min date is not in the correct format (dd-MM-yyyy HH:mm)";
-                }
-            }
-
-            if (request.MaxDate != null)
-            {
-                DateTime dateValue;
-                if (!DateTime.TryParseExact(request.MaxDate, "dd-MM-yyyy HH:mm",
-                    CultureInfo.InvariantCulture, DateTimeStyles.None, out dateValue))
-                {
-                    return "Max date is not in the correct format (dd-MM-yyyy HH:mm)";
-                }
-            }
-            if (request.OrderBy != null)
-            {
-                HashSet<string> validColumns = new HashSet<string>()
-                {
-                    "CategoryName","TicketCode","TicketName", "EventDate", "Price", "Quota"
-                };
-                if (!validColumns.Contains(request.OrderBy))
-                {
-                    return request.OrderBy + " is not a valid column name (column names are case sensitive)";
-                }
-                if (request.OrderState != null)
-                {
-                    if (!request.OrderState.ToLower().Equals("descending") && !request.OrderState.ToLower().Equals("ascending"))
-                    {
-                        return "Order state must be ascending or descending (case insensitive)";
-                    }
-                }
-
-            }
-            if(request.OrderBy == null && request.OrderState != null)
-            {
-                return "Column must be specified to sort in ascending or descending order";
-            }
-            return "Ok";
         }
         public async Task<TicketsResponseModel> Get(TicketRequestModel request)
         {
@@ -104,7 +57,7 @@ namespace Exam1.Services
             }
 
 
-            var ticketsList = await query.Select(q => new TicketModel
+            var ticketsList = await query.Select(q => new TicketInfoModel
             {
                 EventDate = q.EventDate.ToString("dd-MM-yyyy hh:mm"), 
                 Quota = q.Quota,
@@ -115,9 +68,13 @@ namespace Exam1.Services
             }).Where(q => q.Quota > 0).ToListAsync();
 
             var totalTickets = 0;
-            foreach (TicketModel ticket in ticketsList)
+            foreach (TicketInfoModel ticket in ticketsList)
             {
-                totalTickets += ticket.Quota;
+                if(ticket.Quota != null)
+                {
+                    totalTickets += (int)ticket.Quota;
+                }
+                
             }
             var data = new TicketsResponseModel
             {

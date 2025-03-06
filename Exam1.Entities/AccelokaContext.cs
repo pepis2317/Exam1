@@ -17,9 +17,13 @@ public partial class AccelokaContext : DbContext
 
     public virtual DbSet<BookedTicket> BookedTickets { get; set; }
 
+    public virtual DbSet<Cart> Carts { get; set; }
+
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<Ticket> Tickets { get; set; }
+
+    public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -54,6 +58,31 @@ public partial class AccelokaContext : DbContext
             entity.HasOne(d => d.TicketCodeNavigation).WithMany(p => p.BookedTickets)
                 .HasForeignKey(d => d.TicketCode)
                 .HasConstraintName("FK__BookedTic__ticke__46E78A0C");
+        });
+
+        modelBuilder.Entity<Cart>(entity =>
+        {
+            entity.HasKey(e => e.CartId).HasName("PK__Carts__415B03B87AB9F965");
+
+            entity.HasIndex(e => e.BookedTicketId, "Unique_BookedTicketId").IsUnique();
+
+            entity.Property(e => e.CartId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("cartId");
+            entity.Property(e => e.BookedTicketId)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("bookedTicketId");
+            entity.Property(e => e.IsCompleted)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasDefaultValue("false")
+                .HasColumnName("isCompleted");
+            entity.Property(e => e.UserId).HasColumnName("userId");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Carts)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("fk_userId");
         });
 
         modelBuilder.Entity<Category>(entity =>
@@ -96,6 +125,36 @@ public partial class AccelokaContext : DbContext
             entity.HasOne(d => d.Category).WithMany(p => p.Tickets)
                 .HasForeignKey(d => d.CategoryId)
                 .HasConstraintName("FK__Tickets__categor__3A81B327");
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.UserId).HasName("PK__Users__CB9A1CFF4CCB9376");
+
+            entity.HasIndex(e => e.UserName, "UQ__Users__66DCF95C8D0A1355").IsUnique();
+
+            entity.HasIndex(e => e.Email, "UQ__Users__AB6E61644FEFB766").IsUnique();
+
+            entity.Property(e => e.UserId)
+                .HasDefaultValueSql("(newid())")
+                .HasColumnName("userId");
+            entity.Property(e => e.Email)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("email");
+            entity.Property(e => e.Password)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("password");
+            entity.Property(e => e.Role)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasDefaultValue("user")
+                .HasColumnName("role");
+            entity.Property(e => e.UserName)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("userName");
         });
 
         OnModelCreatingPartial(modelBuilder);
